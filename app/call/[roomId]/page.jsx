@@ -18,14 +18,14 @@ function classifyGesture(landmarks) {
   const pinkyExtended  = landmarks[20].y < landmarks[18].y;
   const count = [thumbExtended, indexExtended, middleExtended, ringExtended, pinkyExtended].filter(Boolean).length;
 
-  if (count === 5)                                                                               return { sign: 'HELLO',      swahili: 'Habari',    emoji: '👋' };
-  if (thumbExtended && !indexExtended && !middleExtended && !ringExtended && !pinkyExtended)    return { sign: 'GOOD',       swahili: 'Nzuri',     emoji: '👍' };
-  if (!thumbExtended && !indexExtended && !middleExtended && !ringExtended && !pinkyExtended)   return { sign: 'STOP',       swahili: 'Simama',    emoji: '✊' };
-  if (!thumbExtended && indexExtended && !middleExtended && !ringExtended && !pinkyExtended)    return { sign: 'YES',        swahili: 'Ndio',      emoji: '☝️' };
-  if (!thumbExtended && indexExtended && middleExtended && !ringExtended && !pinkyExtended)     return { sign: 'NO',         swahili: 'Hapana',    emoji: '✌️' };
-  if (!thumbExtended && indexExtended && middleExtended && ringExtended && !pinkyExtended)      return { sign: 'HELP',       swahili: 'Msaada',    emoji: '🤟' };
-  if (!thumbExtended && indexExtended && middleExtended && ringExtended && pinkyExtended)       return { sign: 'WATER',      swahili: 'Maji',      emoji: '💧' };
-  if (!thumbExtended && !indexExtended && !middleExtended && !ringExtended && pinkyExtended)    return { sign: 'I LOVE YOU', swahili: 'Nakupenda', emoji: '🤙' };
+  if (count === 5)                                                                             return { sign: 'HELLO',      swahili: 'Habari',    emoji: '👋' };
+  if (thumbExtended && !indexExtended && !middleExtended && !ringExtended && !pinkyExtended)  return { sign: 'GOOD',       swahili: 'Nzuri',     emoji: '👍' };
+  if (!thumbExtended && !indexExtended && !middleExtended && !ringExtended && !pinkyExtended) return { sign: 'STOP',       swahili: 'Simama',    emoji: '✊' };
+  if (!thumbExtended && indexExtended && !middleExtended && !ringExtended && !pinkyExtended)  return { sign: 'YES',        swahili: 'Ndio',      emoji: '☝️' };
+  if (!thumbExtended && indexExtended && middleExtended && !ringExtended && !pinkyExtended)   return { sign: 'NO',         swahili: 'Hapana',    emoji: '✌️' };
+  if (!thumbExtended && indexExtended && middleExtended && ringExtended && !pinkyExtended)    return { sign: 'HELP',       swahili: 'Msaada',    emoji: '🤟' };
+  if (!thumbExtended && indexExtended && middleExtended && ringExtended && pinkyExtended)     return { sign: 'WATER',      swahili: 'Maji',      emoji: '💧' };
+  if (!thumbExtended && !indexExtended && !middleExtended && !ringExtended && pinkyExtended)  return { sign: 'I LOVE YOU', swahili: 'Nakupenda', emoji: '🤙' };
   return null;
 }
 
@@ -34,13 +34,9 @@ function waitForHands(maxAttempts = 30) {
     let attempts = 0;
     const check = () => {
       attempts++;
-      if (typeof window.Hands === 'function') {
-        resolve();
-      } else if (attempts >= maxAttempts) {
-        reject(new Error('MediaPipe Hands failed to load'));
-      } else {
-        setTimeout(check, 200);
-      }
+      if (typeof window.Hands === 'function') resolve();
+      else if (attempts >= maxAttempts) reject(new Error('MediaPipe failed to load'));
+      else setTimeout(check, 200);
     };
     check();
   });
@@ -73,6 +69,7 @@ export default function CallRoomPage() {
   const [myLastSpeech, setMyLastSpeech] = useState('');
   const [isListening,  setIsListening]  = useState(false);
   const [copied,       setCopied]       = useState(false);
+  const [speechLang,   setSpeechLang]   = useState('en-US');
 
   const isDeaf      = profile?.role === 'deaf';
   const isConnected = status === 'connected';
@@ -115,6 +112,7 @@ export default function CallRoomPage() {
     router.push('/dashboard');
   }
 
+  // ── MediaPipe (deaf users) ───────────────────────────
   const onHandResults = useCallback((results) => {
     const canvas = canvasRef.current;
     const video  = localVideoRef.current;
@@ -123,7 +121,6 @@ export default function CallRoomPage() {
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     if (results.multiHandLandmarks?.length > 0) {
       const landmarks = results.multiHandLandmarks[0];
       ctx.fillStyle = '#06D6A0';
@@ -155,7 +152,6 @@ export default function CallRoomPage() {
   useEffect(() => {
     if (!isDeaf) return;
     let mounted = true;
-
     function loadScript(src) {
       return new Promise((res, rej) => {
         if (document.querySelector(`script[src="${src}"]`)) { res(); return; }
@@ -165,7 +161,6 @@ export default function CallRoomPage() {
         document.head.appendChild(s);
       });
     }
-
     async function initHands() {
       try {
         await loadScript('https://cdn.jsdelivr.net/npm/@mediapipe/hands@0.4.1646424915/hands.js');
@@ -182,7 +177,6 @@ export default function CallRoomPage() {
         console.error('Gesture detection unavailable:', err);
       }
     }
-
     initHands();
     return () => {
       mounted = false;
@@ -190,14 +184,23 @@ export default function CallRoomPage() {
     };
   }, [isDeaf, onHandResults, processFrame]);
 
+  // ── Speech recognition (hearing users) ──────────────
   useEffect(() => {
     if (isDeaf || typeof window === 'undefined') return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
+
+    // Stop current recognition before reinitialising
+    if (recognitionRef.current) {
+      try { recognitionRef.current.stop(); } catch {}
+    }
+    setIsListening(false);
+
     const rec = new SpeechRecognition();
-    rec.continuous = true;
+    rec.continuous     = true;
     rec.interimResults = true;
-    rec.lang = 'en-US';
+    rec.lang           = speechLang;
+
     rec.onresult = (e) => {
       let final = '';
       for (let i = e.resultIndex; i < e.results.length; i++) {
@@ -211,14 +214,15 @@ export default function CallRoomPage() {
     rec.onerror = () => setIsListening(false);
     rec.onend   = () => setIsListening(false);
     recognitionRef.current = rec;
-  }, [isDeaf]);
+  }, [isDeaf, speechLang]);
 
+  // ── TTS for deaf users receiving speech ─────────────
   useEffect(() => {
     if (!remoteSpeech || !isDeaf || typeof window === 'undefined') return;
     const u = new SpeechSynthesisUtterance(remoteSpeech);
-    u.lang = 'en-US'; u.rate = 0.9;
+    u.lang = speechLang; u.rate = 0.9;
     window.speechSynthesis.speak(u);
-  }, [remoteSpeech, isDeaf]);
+  }, [remoteSpeech, isDeaf, speechLang]);
 
   function toggleListening() {
     if (!recognitionRef.current) return;
@@ -226,6 +230,7 @@ export default function CallRoomPage() {
     else             { recognitionRef.current.start(); setIsListening(true); }
   }
 
+  // ── WebRTC ───────────────────────────────────────────
   useEffect(() => {
     if (!user) { router.push('/login'); return; }
     let unsubAnswer = null, unsubCallerICE = null, unsubCalleeICE = null;
@@ -236,7 +241,7 @@ export default function CallRoomPage() {
 
       async function addCandidateSafely(pc, candidateData) {
         if (remoteDescSet) {
-          try { await pc.addIceCandidate(new RTCIceCandidate(candidateData)); } catch (e) { console.warn('ICE add failed:', e); }
+          try { await pc.addIceCandidate(new RTCIceCandidate(candidateData)); } catch (e) { console.warn(e); }
         } else {
           pendingCandidates.push(candidateData);
         }
@@ -329,6 +334,7 @@ export default function CallRoomPage() {
   return (
     <div style={{ background: '#080D1A', minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
 
+      {/* TOP BAR */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 24px', borderBottom: '1px solid #1E2D4A' }}>
         <div style={{ fontSize: 20, fontWeight: 700, color: '#F8FAFC' }}>
           TSL<span style={{ color: '#06D6A0' }}>Bridge</span>
@@ -344,8 +350,10 @@ export default function CallRoomPage() {
         </div>
       </div>
 
+      {/* VIDEO AREA */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: 16 }}>
 
+        {/* LOCAL */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
             YOU — {isDeaf ? '🤟 Deaf User' : '🎙️ Hearing User'}
@@ -359,6 +367,7 @@ export default function CallRoomPage() {
             <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(6,214,160,.8)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6 }}>YOU</div>
           </div>
 
+          {/* My output */}
           <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
               {isDeaf ? 'Your sign detected →' : 'Your speech →'}
@@ -370,16 +379,55 @@ export default function CallRoomPage() {
             </div>
           </div>
 
+          {/* Speech controls — hearing users only */}
           {!isDeaf && (
-            <div style={{ marginTop: 10, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: '#3B82F6' }}>🎙️ Speech-to-Text</span>
-              <button onClick={toggleListening} style={{ padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer', background: isListening ? 'rgba(239,68,68,.2)' : 'rgba(59,130,246,.2)', color: isListening ? '#FCA5A5' : '#3B82F6', border: `1px solid ${isListening ? 'rgba(239,68,68,.4)' : 'rgba(59,130,246,.4)'}` }}>
-                {isListening ? '⏹ Stop' : '▶ Start'}
-              </button>
+            <div style={{ marginTop: 10, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
+              {/* Header row */}
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#3B82F6' }}>🎙️ Speech-to-Text</span>
+                <button onClick={toggleListening}
+                  style={{ padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                    background: isListening ? 'rgba(239,68,68,.2)' : 'rgba(59,130,246,.2)',
+                    color: isListening ? '#FCA5A5' : '#3B82F6',
+                    border: `1px solid ${isListening ? 'rgba(239,68,68,.4)' : 'rgba(59,130,246,.4)'}` }}>
+                  {isListening ? '⏹ Stop' : '▶ Start'}
+                </button>
+              </div>
+
+              {/* Language toggle */}
+              <div style={{ display: 'flex', gap: 8 }}>
+                {[
+                  { code: 'en-US', label: '🇬🇧 English' },
+                  { code: 'sw-TZ', label: '🇹🇿 Swahili' },
+                ].map(lang => (
+                  <button key={lang.code}
+                    onClick={() => {
+                      if (isListening) { recognitionRef.current?.stop(); setIsListening(false); }
+                      setSpeechLang(lang.code);
+                    }}
+                    style={{
+                      flex: 1, padding: '7px 10px', borderRadius: 8, fontSize: 12,
+                      fontWeight: 600, cursor: 'pointer',
+                      background: speechLang === lang.code ? 'rgba(6,214,160,.15)' : '#0A1628',
+                      color: speechLang === lang.code ? '#06D6A0' : '#64748B',
+                      border: `1px solid ${speechLang === lang.code ? 'rgba(6,214,160,.4)' : '#1E2D4A'}`,
+                    }}>
+                    {lang.label}
+                  </button>
+                ))}
+              </div>
+
+              {/* Hint text */}
+              <div style={{ marginTop: 8, fontSize: 11, color: '#334155' }}>
+                {speechLang === 'sw-TZ'
+                  ? 'Sema kwa Kiswahili — maneno yatakuonyeshwa kwa mtumiaji wa viziwi.'
+                  : 'Speak in English — words will be shown to the deaf user.'}
+              </div>
             </div>
           )}
         </div>
 
+        {/* REMOTE */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8 }}>REMOTE USER</div>
           <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: '#0A1628', borderRadius: 14, overflow: 'hidden' }}>
@@ -396,6 +444,7 @@ export default function CallRoomPage() {
             <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(255,255,255,.5)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6 }}>REMOTE</div>
           </div>
 
+          {/* Remote translation incoming */}
           <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
             <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
               {isDeaf ? 'Their speech →' : 'Their sign →'}
@@ -409,6 +458,7 @@ export default function CallRoomPage() {
         </div>
       </div>
 
+      {/* CALL CONTROLS */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '16px', borderTop: '1px solid #1E2D4A' }}>
         <button onClick={toggleMute} title={isMuted ? 'Unmute' : 'Mute'}
           style={{ width: 48, height: 48, borderRadius: '50%', fontSize: 20, cursor: 'pointer', border: '1px solid #1E2D4A', background: isMuted ? 'rgba(239,68,68,.2)' : '#101828', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
