@@ -71,10 +71,14 @@ export default function DashboardPage() {
             border: `1px solid ${profile.role === 'deaf' ? 'rgba(6,214,160,.3)' : 'rgba(59,130,246,.3)'}` }}>
             {profile.role === 'deaf' ? '🤟 Deaf User' : '🎙️ Hearing User'}
           </span>
-          <button onClick={handleLogout}
-            style={{ padding: '8px 16px', borderRadius: 8, background: 'transparent', border: '1px solid #1E2D4A', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}>
-            Sign Out
-          </button>
+          <button onClick={() => router.push('/profile')}
+  style={{ padding: '8px 16px', borderRadius: 8, background: 'transparent', border: '1px solid #1E2D4A', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}>
+  👤 Profile
+</button>
+<button onClick={handleLogout}
+  style={{ padding: '8px 16px', borderRadius: 8, background: 'transparent', border: '1px solid #1E2D4A', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}>
+  Sign Out
+</button>
         </div>
       </nav>
 
