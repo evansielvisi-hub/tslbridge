@@ -63,6 +63,10 @@ export default function ProfilePage() {
             style={{ padding: '8px 16px', borderRadius: 8, background: 'transparent', border: '1px solid #1E2D4A', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}>
             ← Dashboard
           </button>
+          <button onClick={() => router.push('/profile')}
+  style={{ padding: '8px 16px', borderRadius: 8, background: 'transparent', border: '1px solid #1E2D4A', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}>
+  👤 Profile
+</button>
           <button onClick={handleLogout}
             style={{ padding: '8px 16px', borderRadius: 8, background: 'transparent', border: '1px solid #1E2D4A', color: '#94A3B8', cursor: 'pointer', fontSize: 13 }}>
             Sign Out
