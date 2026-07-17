@@ -6,7 +6,7 @@ import {
 } from 'firebase/firestore';
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
-
+import SignDisplay from '@/components/SignDisplay';
 const STUN = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
 // ── Improved 20-sign TSL classifier ─────────────────────
@@ -461,15 +461,20 @@ export default function CallRoomPage() {
             <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(255,255,255,.5)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6 }}>REMOTE</div>
           </div>
 
-          <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-              {isDeaf ? 'Their speech →' : 'Their sign →'}
-            </div>
-            <div style={{ fontSize: 15, minHeight: 22, color: isDeaf ? '#3B82F6' : '#06D6A0' }}>
-              {isDeaf ? (remoteSpeech || 'Waiting for hearing user to speak…')
-                      : (remoteSign   || 'Waiting for deaf user to sign…')}
-            </div>
-          </div>
+          {isDeaf ? (
+  /* Deaf user sees incoming speech as ASL signs */
+  <SignDisplay text={remoteSpeech} active={!!remoteSpeech} />
+) : (
+  /* Hearing user sees incoming sign text */
+  <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
+    <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+      Their sign →
+    </div>
+    <div style={{ fontSize: 15, minHeight: 22, color: '#06D6A0' }}>
+      {remoteSign || 'Waiting for deaf user to sign…'}
+    </div>
+  </div>
+)}
         </div>
       </div>
 
