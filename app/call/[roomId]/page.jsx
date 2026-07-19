@@ -1,4 +1,6 @@
 'use client';
+export const dynamic = 'force-dynamic';
+
 import { useEffect, useRef, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import {
@@ -7,28 +9,20 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import SignDisplay from '@/components/SignDisplay';
+
 const STUN = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
-// ── Improved 20-sign TSL classifier ─────────────────────
 function classifyGesture(landmarks) {
   if (!landmarks || landmarks.length < 21) return null;
-
-  // Improved accuracy: compare fingertip to PIP (middle knuckle) with threshold
-  // This is more reliable than comparing tip to MCP base knuckle
   const MIN = 0.03;
-
   const indexExtended  = (landmarks[6].y  - landmarks[8].y)  > MIN;
   const middleExtended = (landmarks[10].y - landmarks[12].y) > MIN;
   const ringExtended   = (landmarks[14].y - landmarks[16].y) > MIN;
   const pinkyExtended  = (landmarks[18].y - landmarks[20].y) > MIN;
-
-  // Thumb: measure horizontal distance from tip to index base
-  const thumbExtended = Math.abs(landmarks[4].x - landmarks[5].x) > MIN;
-
+  const thumbExtended  = Math.abs(landmarks[4].x - landmarks[5].x) > MIN;
   const t = thumbExtended, i = indexExtended,
         m = middleExtended, r = ringExtended, p = pinkyExtended;
 
-  // ── Original 8 signs ──────────────────────────────────
   if ( t &&  i &&  m &&  r &&  p) return { sign: 'HELLO',      swahili: 'Habari',    emoji: '👋' };
   if ( t && !i && !m && !r && !p) return { sign: 'GOOD',       swahili: 'Nzuri',     emoji: '👍' };
   if (!t && !i && !m && !r && !p) return { sign: 'STOP',       swahili: 'Simama',    emoji: '✊' };
@@ -37,8 +31,6 @@ function classifyGesture(landmarks) {
   if (!t &&  i &&  m &&  r && !p) return { sign: 'HELP',       swahili: 'Msaada',    emoji: '🤟' };
   if (!t &&  i &&  m &&  r &&  p) return { sign: 'WATER',      swahili: 'Maji',      emoji: '💧' };
   if (!t && !i && !m && !r &&  p) return { sign: 'I LOVE YOU', swahili: 'Nakupenda', emoji: '🤙' };
-
-  // ── New 12 signs ──────────────────────────────────────
   if ( t &&  i && !m && !r && !p) return { sign: 'THANK YOU',  swahili: 'Asante',    emoji: '🙏' };
   if ( t &&  i &&  m && !r && !p) return { sign: 'NAME',       swahili: 'Jina',      emoji: '✍️' };
   if ( t &&  i &&  m &&  r && !p) return { sign: 'FOOD',       swahili: 'Chakula',   emoji: '🍽️' };
@@ -51,7 +43,6 @@ function classifyGesture(landmarks) {
   if ( t && !i &&  m &&  r && !p) return { sign: 'PLEASE',     swahili: 'Tafadhali', emoji: '🤲' };
   if (!t && !i && !m &&  r &&  p) return { sign: 'WHERE',      swahili: 'Wapi',      emoji: '❓' };
   if ( t && !i && !m &&  r &&  p) return { sign: 'HOME',       swahili: 'Nyumbani',  emoji: '🏠' };
-
   return null;
 }
 
@@ -82,7 +73,7 @@ export default function CallRoomPage() {
   const handsRef       = useRef(null);
   const rafRef         = useRef(null);
   const lastSignRef    = useRef('');
-  const stabilityRef   = useRef({ sign: '', count: 0 }); // ← accuracy improvement
+  const stabilityRef   = useRef({ sign: '', count: 0 });
   const canvasRef      = useRef(null);
   const recognitionRef = useRef(null);
 
@@ -111,8 +102,11 @@ export default function CallRoomPage() {
       try {
         const { type, text } = JSON.parse(e.data);
         if (type === 'sign')   setRemoteSign(text);
-        if (type === 'speech') setRemoteSpeech(text);
-      } catch {}
+        if (type === 'speech') {
+          console.log('Received speech:', text); // debug
+          setRemoteSpeech(text);
+        }
+      } catch (err) { console.error('Data channel parse error:', err); }
     };
     dataChannelRef.current = channel;
   }
@@ -138,7 +132,7 @@ export default function CallRoomPage() {
     router.push('/dashboard');
   }
 
-  // ── MediaPipe (deaf users) ───────────────────────────
+  // ── MediaPipe ────────────────────────────────────────
   const onHandResults = useCallback((results) => {
     const canvas = canvasRef.current;
     const video  = localVideoRef.current;
@@ -147,21 +141,14 @@ export default function CallRoomPage() {
     canvas.width  = video.videoWidth  || 640;
     canvas.height = video.videoHeight || 480;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
-
     if (results.multiHandLandmarks?.length > 0) {
       const landmarks = results.multiHandLandmarks[0];
-
-      // Draw landmark dots + connections
       ctx.fillStyle = '#06D6A0';
-      ctx.strokeStyle = 'rgba(6,214,160,0.35)';
-      ctx.lineWidth = 1.5;
       landmarks.forEach(pt => {
         ctx.beginPath();
         ctx.arc(pt.x * canvas.width, pt.y * canvas.height, 4, 0, 2 * Math.PI);
         ctx.fill();
       });
-
-      // ── Stability buffer: require 3 consistent frames ──
       const result = classifyGesture(landmarks);
       if (result) {
         const stab = stabilityRef.current;
@@ -172,10 +159,7 @@ export default function CallRoomPage() {
             setMySign(result);
             sendData('sign', `${result.emoji} ${result.sign} (${result.swahili})`);
           }
-        } else {
-          stab.sign  = result.sign;
-          stab.count = 1;
-        }
+        } else { stab.sign = result.sign; stab.count = 1; }
       } else {
         stabilityRef.current = { sign: '', count: 0 };
         lastSignRef.current = '';
@@ -219,9 +203,7 @@ export default function CallRoomPage() {
         hands.onResults(onHandResults);
         handsRef.current = hands;
         rafRef.current = requestAnimationFrame(processFrame);
-      } catch (err) {
-        console.error('Gesture detection unavailable:', err);
-      }
+      } catch (err) { console.error('Gesture detection unavailable:', err); }
     }
     initHands();
     return () => {
@@ -230,14 +212,12 @@ export default function CallRoomPage() {
     };
   }, [isDeaf, onHandResults, processFrame]);
 
-  // ── Speech recognition (hearing users) ──────────────
+  // ── Speech recognition ───────────────────────────────
   useEffect(() => {
     if (isDeaf || typeof window === 'undefined') return;
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     if (!SpeechRecognition) return;
-    if (recognitionRef.current) {
-      try { recognitionRef.current.stop(); } catch {}
-    }
+    if (recognitionRef.current) { try { recognitionRef.current.stop(); } catch {} }
     setIsListening(false);
     const rec = new SpeechRecognition();
     rec.continuous = true; rec.interimResults = true; rec.lang = speechLang;
@@ -246,7 +226,10 @@ export default function CallRoomPage() {
       for (let i = e.resultIndex; i < e.results.length; i++) {
         if (e.results[i].isFinal) final += e.results[i][0].transcript;
       }
-      if (final) { setMyLastSpeech(final.trim()); sendData('speech', final.trim()); }
+      if (final) {
+        setMyLastSpeech(final.trim());
+        sendData('speech', final.trim());
+      }
     };
     rec.onerror = () => setIsListening(false);
     rec.onend   = () => setIsListening(false);
@@ -383,10 +366,10 @@ export default function CallRoomPage() {
         </div>
       </div>
 
-      {/* VIDEO AREA */}
+      {/* VIDEO + TRANSLATION AREA */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: 16 }}>
 
-        {/* LOCAL */}
+        {/* LOCAL VIDEO */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
             YOU — {isDeaf ? '🤟 Deaf User' : '🎙️ Hearing User'}
@@ -412,7 +395,7 @@ export default function CallRoomPage() {
             </div>
           </div>
 
-          {/* Speech controls — hearing users only */}
+          {/* Speech controls for hearing users */}
           {!isDeaf && (
             <div style={{ marginTop: 10, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
               <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
@@ -444,7 +427,7 @@ export default function CallRoomPage() {
           )}
         </div>
 
-        {/* REMOTE */}
+        {/* REMOTE VIDEO */}
         <div>
           <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8 }}>REMOTE USER</div>
           <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: '#0A1628', borderRadius: 14, overflow: 'hidden' }}>
@@ -461,20 +444,32 @@ export default function CallRoomPage() {
             <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(255,255,255,.5)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6 }}>REMOTE</div>
           </div>
 
+          {/* ── TRANSLATION OUTPUT ── */}
           {isDeaf ? (
-  /* Deaf user sees incoming speech as ASL signs */
-  <SignDisplay text={remoteSpeech} active={!!remoteSpeech} />
-) : (
-  /* Hearing user sees incoming sign text */
-  <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
-    <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-      Their sign →
-    </div>
-    <div style={{ fontSize: 15, minHeight: 22, color: '#06D6A0' }}>
-      {remoteSign || 'Waiting for deaf user to sign…'}
-    </div>
-  </div>
-)}
+            /* DEAF USER sees hearing person's speech as ASL signs */
+            <div>
+              <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A', marginBottom: 8 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+                  Their speech (text) →
+                </div>
+                <div style={{ fontSize: 15, minHeight: 22, color: '#3B82F6' }}>
+                  {remoteSpeech || 'Waiting for hearing user to speak…'}
+                </div>
+              </div>
+              {/* ASL Sign Display */}
+              <SignDisplay text={remoteSpeech} active={true} />
+            </div>
+          ) : (
+            /* HEARING USER sees deaf person's sign as text */
+            <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
+                Their sign →
+              </div>
+              <div style={{ fontSize: 15, minHeight: 22, color: '#06D6A0' }}>
+                {remoteSign || 'Waiting for deaf user to sign…'}
+              </div>
+            </div>
+          )}
         </div>
       </div>
 
