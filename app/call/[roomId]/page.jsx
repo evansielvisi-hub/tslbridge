@@ -7,7 +7,7 @@ import {
 import { db } from '@/lib/firebase';
 import { useAuth } from '@/context/AuthContext';
 import SignDisplay from '@/components/SignDisplay';
-import SignDisplay from '@/components/SignDisplay';const STUN = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
+const STUN = { iceServers: [{ urls: ['stun:stun1.l.google.com:19302', 'stun:stun2.l.google.com:19302'] }] };
 
 // ── Improved 20-sign TSL classifier ─────────────────────
 function classifyGesture(landmarks) {
