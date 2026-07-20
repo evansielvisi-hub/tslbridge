@@ -23,26 +23,26 @@ function classifyGesture(landmarks) {
   const t = thumbExtended, i = indexExtended,
         m = middleExtended, r = ringExtended, p = pinkyExtended;
 
-  if ( t &&  i &&  m &&  r &&  p) return { sign: 'HELLO',      swahili: 'Habari',    emoji: '👋' };
-  if ( t && !i && !m && !r && !p) return { sign: 'GOOD',       swahili: 'Nzuri',     emoji: '👍' };
-  if (!t && !i && !m && !r && !p) return { sign: 'STOP',       swahili: 'Simama',    emoji: '✊' };
-  if (!t &&  i && !m && !r && !p) return { sign: 'YES',        swahili: 'Ndio',      emoji: '☝️' };
-  if (!t &&  i &&  m && !r && !p) return { sign: 'NO',         swahili: 'Hapana',    emoji: '✌️' };
-  if (!t &&  i &&  m &&  r && !p) return { sign: 'HELP',       swahili: 'Msaada',    emoji: '🤟' };
-  if (!t &&  i &&  m &&  r &&  p) return { sign: 'WATER',      swahili: 'Maji',      emoji: '💧' };
-  if (!t && !i && !m && !r &&  p) return { sign: 'I LOVE YOU', swahili: 'Nakupenda', emoji: '🤙' };
-  if ( t &&  i && !m && !r && !p) return { sign: 'THANK YOU',  swahili: 'Asante',    emoji: '🙏' };
-  if ( t &&  i &&  m && !r && !p) return { sign: 'NAME',       swahili: 'Jina',      emoji: '✍️' };
-  if ( t &&  i &&  m &&  r && !p) return { sign: 'FOOD',       swahili: 'Chakula',   emoji: '🍽️' };
-  if ( t && !i &&  m &&  r &&  p) return { sign: 'MONEY',      swahili: 'Pesa',      emoji: '💰' };
-  if ( t && !i && !m && !r &&  p) return { sign: 'SCHOOL',     swahili: 'Shule',     emoji: '🏫' };
-  if (!t &&  i && !m && !r &&  p) return { sign: 'DOCTOR',     swahili: 'Daktari',   emoji: '🏥' };
-  if (!t && !i &&  m &&  r &&  p) return { sign: 'FRIEND',     swahili: 'Rafiki',    emoji: '👥' };
-  if ( t && !i &&  m && !r && !p) return { sign: 'SORRY',      swahili: 'Samahani',  emoji: '😔' };
-  if (!t && !i &&  m &&  r && !p) return { sign: 'COME',       swahili: 'Kuja',      emoji: '👉' };
-  if ( t && !i &&  m &&  r && !p) return { sign: 'PLEASE',     swahili: 'Tafadhali', emoji: '🤲' };
-  if (!t && !i && !m &&  r &&  p) return { sign: 'WHERE',      swahili: 'Wapi',      emoji: '❓' };
-  if ( t && !i && !m &&  r &&  p) return { sign: 'HOME',       swahili: 'Nyumbani',  emoji: '🏠' };
+  if ( t &&  i &&  m &&  r &&  p) return { sign: 'HELLO',      swahili: 'Habari' };
+  if ( t && !i && !m && !r && !p) return { sign: 'GOOD',       swahili: 'Nzuri' };
+  if (!t && !i && !m && !r && !p) return { sign: 'STOP',       swahili: 'Simama' };
+  if (!t &&  i && !m && !r && !p) return { sign: 'YES',        swahili: 'Ndio' };
+  if (!t &&  i &&  m && !r && !p) return { sign: 'NO',         swahili: 'Hapana' };
+  if (!t &&  i &&  m &&  r && !p) return { sign: 'HELP',       swahili: 'Msaada' };
+  if (!t &&  i &&  m &&  r &&  p) return { sign: 'WATER',      swahili: 'Maji' };
+  if (!t && !i && !m && !r &&  p) return { sign: 'I LOVE YOU', swahili: 'Nakupenda' };
+  if ( t &&  i && !m && !r && !p) return { sign: 'THANK YOU',  swahili: 'Asante' };
+  if ( t &&  i &&  m && !r && !p) return { sign: 'NAME',       swahili: 'Jina' };
+  if ( t &&  i &&  m &&  r && !p) return { sign: 'FOOD',       swahili: 'Chakula' };
+  if ( t && !i &&  m &&  r &&  p) return { sign: 'MONEY',      swahili: 'Pesa' };
+  if ( t && !i && !m && !r &&  p) return { sign: 'SCHOOL',     swahili: 'Shule' };
+  if (!t &&  i && !m && !r &&  p) return { sign: 'DOCTOR',     swahili: 'Daktari' };
+  if (!t && !i &&  m &&  r &&  p) return { sign: 'FRIEND',     swahili: 'Rafiki' };
+  if ( t && !i &&  m && !r && !p) return { sign: 'SORRY',      swahili: 'Samahani' };
+  if (!t && !i &&  m &&  r && !p) return { sign: 'COME',       swahili: 'Kuja' };
+  if ( t && !i &&  m &&  r && !p) return { sign: 'PLEASE',     swahili: 'Tafadhali' };
+  if (!t && !i && !m &&  r &&  p) return { sign: 'WHERE',      swahili: 'Wapi' };
+  if ( t && !i && !m &&  r &&  p) return { sign: 'HOME',       swahili: 'Nyumbani' };
   return null;
 }
 
@@ -77,12 +77,13 @@ export default function CallRoomPage() {
   const canvasRef      = useRef(null);
   const recognitionRef = useRef(null);
 
-  const [status,       setStatus]       = useState('Starting camera…');
+  const [status,       setStatus]       = useState('Starting camera...');
   const [isMuted,      setIsMuted]      = useState(false);
   const [isCameraOff,  setIsCameraOff]  = useState(false);
   const [mySign,       setMySign]       = useState(null);
   const [remoteSign,   setRemoteSign]   = useState('');
   const [remoteSpeech, setRemoteSpeech] = useState('');
+  const [speechKey,    setSpeechKey]    = useState(0); // forces SignDisplay reset
   const [myLastSpeech, setMyLastSpeech] = useState('');
   const [isListening,  setIsListening]  = useState(false);
   const [copied,       setCopied]       = useState(false);
@@ -93,20 +94,31 @@ export default function CallRoomPage() {
 
   function sendData(type, text) {
     const ch = dataChannelRef.current;
-    if (ch?.readyState === 'open') ch.send(JSON.stringify({ type, text }));
+    if (ch?.readyState === 'open') {
+      ch.send(JSON.stringify({ type, text }));
+    } else {
+      console.warn('Data channel not open. State:', ch?.readyState);
+    }
   }
 
   function setupDataChannel(channel) {
-    channel.onopen = () => console.log('Data channel open');
+    channel.onopen    = () => console.log('Data channel OPEN');
+    channel.onclose   = () => console.log('Data channel CLOSED');
+    channel.onerror   = (e) => console.error('Data channel error:', e);
     channel.onmessage = (e) => {
       try {
         const { type, text } = JSON.parse(e.data);
-        if (type === 'sign')   setRemoteSign(text);
-        if (type === 'speech') {
-          console.log('Received speech:', text); // debug
-          setRemoteSpeech(text);
+        console.log('Received:', type, text);
+        if (type === 'sign') {
+          setRemoteSign(text);
         }
-      } catch (err) { console.error('Data channel parse error:', err); }
+        if (type === 'speech') {
+          setRemoteSpeech(text);
+          setSpeechKey(k => k + 1); // ← KEY FIX: forces SignDisplay to restart
+        }
+      } catch (err) {
+        console.error('Data channel parse error:', err);
+      }
     };
     dataChannelRef.current = channel;
   }
@@ -157,7 +169,7 @@ export default function CallRoomPage() {
           if (stab.count === 3 && result.sign !== lastSignRef.current) {
             lastSignRef.current = result.sign;
             setMySign(result);
-            sendData('sign', `${result.emoji} ${result.sign} (${result.swahili})`);
+            sendData('sign', `${result.sign} (${result.swahili})`);
           }
         } else { stab.sign = result.sign; stab.count = 1; }
       } else {
@@ -265,7 +277,7 @@ export default function CallRoomPage() {
         } else { pendingCandidates.push(data); }
       }
 
-      setStatus('Starting camera…');
+      setStatus('Starting camera...');
       let stream;
       try {
         stream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
@@ -288,12 +300,12 @@ export default function CallRoomPage() {
         if (pc.connectionState === 'failed')       setStatus('Connection failed');
       };
 
-      setStatus('Connecting to room…');
+      setStatus('Connecting to room...');
       const roomRef  = doc(db, 'calls', roomId);
       const roomSnap = await getDoc(roomRef);
 
       if (!roomSnap.exists() || !roomSnap.data()?.offer) {
-        setStatus('Waiting for someone to join…');
+        setStatus('Waiting for someone to join...');
         const dc = pc.createDataChannel('translation');
         setupDataChannel(dc);
         pc.onicecandidate = async (e) => {
@@ -318,7 +330,7 @@ export default function CallRoomPage() {
           snap.docChanges().forEach(c => { if (c.type === 'added') addCandidateSafely(pc, c.doc.data()); });
         });
       } else {
-        setStatus('Joining call…');
+        setStatus('Joining call...');
         pc.ondatachannel = (e) => setupDataChannel(e.channel);
         pc.onicecandidate = async (e) => {
           if (e.candidate) await addDoc(collection(db, 'calls', roomId, 'calleeCandidates'), e.candidate.toJSON());
@@ -361,18 +373,18 @@ export default function CallRoomPage() {
             {isConnected ? 'Connected' : status}
           </div>
           <button onClick={copyRoomId} style={{ padding: '6px 14px', borderRadius: 8, background: '#101828', border: '1px solid #1E2D4A', color: '#94A3B8', cursor: 'pointer', fontSize: 12, fontWeight: 600 }}>
-            🔑 {roomId} {copied ? '✓ Copied!' : '— Copy ID'}
+            Room: {roomId} {copied ? '(Copied!)' : '— Copy'}
           </button>
         </div>
       </div>
 
-      {/* VIDEO + TRANSLATION AREA */}
+      {/* VIDEO + TRANSLATION */}
       <div style={{ flex: 1, display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, padding: 16 }}>
 
-        {/* LOCAL VIDEO */}
+        {/* LOCAL */}
         <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8 }}>
-            YOU — {isDeaf ? '🤟 Deaf User' : '🎙️ Hearing User'}
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+            You — {isDeaf ? 'Deaf User' : 'Hearing User'}
           </div>
           <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: '#0A1628', borderRadius: 14, overflow: 'hidden' }}>
             <video ref={localVideoRef} autoPlay muted playsInline
@@ -380,36 +392,39 @@ export default function CallRoomPage() {
             {isDeaf && (
               <canvas ref={canvasRef} style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', transform: 'scaleX(-1)' }} />
             )}
-            <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(6,214,160,.8)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6 }}>YOU</div>
+            <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(255,255,255,.7)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6, letterSpacing: '.06em' }}>
+              YOU
+            </div>
           </div>
 
-          {/* My output */}
           <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
-            <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-              {isDeaf ? 'Your sign detected →' : 'Your speech →'}
+            <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+              {isDeaf ? 'Sign detected' : 'Your speech'}
             </div>
             <div style={{ fontSize: 15, color: '#F8FAFC', minHeight: 22 }}>
               {isDeaf
-                ? (mySign ? `${mySign.emoji} ${mySign.sign} · ${mySign.swahili}` : 'Show a hand sign to the camera…')
-                : (myLastSpeech || 'Press Start and speak…')}
+                ? (mySign ? `${mySign.sign} — ${mySign.swahili}` : 'Show a hand sign to the camera')
+                : (myLastSpeech || 'Press Start and speak')}
             </div>
           </div>
 
-          {/* Speech controls for hearing users */}
+          {/* Speech controls */}
           {!isDeaf && (
-            <div style={{ marginTop: 10, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-                <span style={{ fontSize: 13, fontWeight: 600, color: '#3B82F6' }}>🎙️ Speech-to-Text</span>
+            <div style={{ marginTop: 10, padding: '14px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+                <span style={{ fontSize: 13, fontWeight: 600, color: '#3B82F6', textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                  Speech Recognition
+                </span>
                 <button onClick={toggleListening}
-                  style={{ padding: '6px 16px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
+                  style={{ padding: '6px 18px', borderRadius: 8, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     background: isListening ? 'rgba(239,68,68,.2)' : 'rgba(59,130,246,.2)',
                     color: isListening ? '#FCA5A5' : '#3B82F6',
                     border: `1px solid ${isListening ? 'rgba(239,68,68,.4)' : 'rgba(59,130,246,.4)'}` }}>
-                  {isListening ? '⏹ Stop' : '▶ Start'}
+                  {isListening ? 'Stop' : 'Start'}
                 </button>
               </div>
               <div style={{ display: 'flex', gap: 8 }}>
-                {[{ code: 'en-US', label: '🇬🇧 English' }, { code: 'sw-TZ', label: '🇹🇿 Swahili' }].map(lang => (
+                {[{ code: 'en-US', label: 'English' }, { code: 'sw-TZ', label: 'Swahili' }].map(lang => (
                   <button key={lang.code}
                     onClick={() => { if (isListening) { recognitionRef.current?.stop(); setIsListening(false); } setSpeechLang(lang.code); }}
                     style={{ flex: 1, padding: '7px 10px', borderRadius: 8, fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -421,15 +436,17 @@ export default function CallRoomPage() {
                 ))}
               </div>
               <div style={{ marginTop: 8, fontSize: 11, color: '#334155' }}>
-                {speechLang === 'sw-TZ' ? 'Sema kwa Kiswahili — maneno yatakuonyeshwa.' : 'Speak in English — words will be shown to the deaf user.'}
+                {speechLang === 'sw-TZ' ? 'Sema kwa Kiswahili' : 'Speak in English'}
               </div>
             </div>
           )}
         </div>
 
-        {/* REMOTE VIDEO */}
+        {/* REMOTE */}
         <div>
-          <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8 }}>REMOTE USER</div>
+          <div style={{ fontSize: 12, fontWeight: 600, color: '#475569', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+            Remote User
+          </div>
           <div style={{ position: 'relative', width: '100%', aspectRatio: '4/3', background: '#0A1628', borderRadius: 14, overflow: 'hidden' }}>
             <video ref={remoteVideoRef} autoPlay playsInline
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
@@ -437,36 +454,36 @@ export default function CallRoomPage() {
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12 }}>
                 <div style={{ width: 32, height: 32, borderRadius: '50%', border: '3px solid #06D6A0', borderTopColor: 'transparent', animation: 'spin 1s linear infinite' }} />
                 <span style={{ fontSize: 13, color: '#475569' }}>
-                  {status === 'Waiting for someone to join…' ? `Share Room ID: ${roomId}` : status}
+                  {status === 'Waiting for someone to join...' ? `Share Room ID: ${roomId}` : status}
                 </span>
               </div>
             )}
-            <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(255,255,255,.5)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6 }}>REMOTE</div>
+            <div style={{ position: 'absolute', bottom: 8, left: 8, fontSize: 11, color: 'rgba(255,255,255,.5)', background: 'rgba(0,0,0,.5)', padding: '2px 8px', borderRadius: 6, letterSpacing: '.06em' }}>
+              REMOTE
+            </div>
           </div>
 
-          {/* ── TRANSLATION OUTPUT ── */}
+          {/* Translation output */}
           {isDeaf ? (
-            /* DEAF USER sees hearing person's speech as ASL signs */
             <div>
-              <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A', marginBottom: 8 }}>
-                <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-                  Their speech (text) →
+              <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A', marginBottom: 4 }}>
+                <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                  Their speech (text)
                 </div>
                 <div style={{ fontSize: 15, minHeight: 22, color: '#3B82F6' }}>
-                  {remoteSpeech || 'Waiting for hearing user to speak…'}
+                  {remoteSpeech || 'Waiting for hearing user to speak...'}
                 </div>
               </div>
-              {/* ASL Sign Display */}
-              <SignDisplay text={remoteSpeech} active={true} />
+              {/* ASL Sign Display — key forces remount on each new speech */}
+              <SignDisplay key={speechKey} text={remoteSpeech} active={true} />
             </div>
           ) : (
-            /* HEARING USER sees deaf person's sign as text */
             <div style={{ marginTop: 12, padding: '12px 16px', borderRadius: 12, background: '#101828', border: '1px solid #1E2D4A' }}>
-              <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6 }}>
-                Their sign →
+              <div style={{ fontSize: 11, fontWeight: 600, color: '#475569', marginBottom: 6, textTransform: 'uppercase', letterSpacing: '.08em' }}>
+                Their sign
               </div>
               <div style={{ fontSize: 15, minHeight: 22, color: '#06D6A0' }}>
-                {remoteSign || 'Waiting for deaf user to sign…'}
+                {remoteSign || 'Waiting for deaf user to sign...'}
               </div>
             </div>
           )}
@@ -475,21 +492,29 @@ export default function CallRoomPage() {
 
       {/* CALL CONTROLS */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 16, padding: '16px', borderTop: '1px solid #1E2D4A' }}>
-        <button onClick={toggleMute}
-          style={{ width: 48, height: 48, borderRadius: '50%', fontSize: 20, cursor: 'pointer', border: '1px solid #1E2D4A', background: isMuted ? 'rgba(239,68,68,.2)' : '#101828', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {isMuted ? '🔇' : '🎙️'}
+        <button onClick={toggleMute} title={isMuted ? 'Unmute' : 'Mute'}
+          style={{ width: 48, height: 48, borderRadius: '50%', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            border: '1px solid #1E2D4A', background: isMuted ? 'rgba(239,68,68,.2)' : '#101828',
+            color: isMuted ? '#FCA5A5' : '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {isMuted ? 'MIC\nOFF' : 'MIC'}
         </button>
-        <button onClick={toggleCamera}
-          style={{ width: 48, height: 48, borderRadius: '50%', fontSize: 20, cursor: 'pointer', border: '1px solid #1E2D4A', background: isCameraOff ? 'rgba(239,68,68,.2)' : '#101828', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {isCameraOff ? '📵' : '📹'}
+        <button onClick={toggleCamera} title={isCameraOff ? 'Camera on' : 'Camera off'}
+          style={{ width: 48, height: 48, borderRadius: '50%', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            border: '1px solid #1E2D4A', background: isCameraOff ? 'rgba(239,68,68,.2)' : '#101828',
+            color: isCameraOff ? '#FCA5A5' : '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          CAM
         </button>
-        <button onClick={hangUp}
-          style={{ width: 56, height: 56, borderRadius: '50%', fontSize: 22, cursor: 'pointer', border: 'none', background: '#EF4444', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          📵
+        <button onClick={hangUp} title="End call"
+          style={{ width: 56, height: 56, borderRadius: '50%', fontSize: 12, fontWeight: 700, cursor: 'pointer',
+            border: 'none', background: '#EF4444', color: '#fff',
+            display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          END
         </button>
-        <button onClick={copyRoomId}
-          style={{ width: 48, height: 48, borderRadius: '50%', fontSize: 20, cursor: 'pointer', border: '1px solid #1E2D4A', background: '#101828', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-          {copied ? '✅' : '🔗'}
+        <button onClick={copyRoomId} title="Copy Room ID"
+          style={{ width: 48, height: 48, borderRadius: '50%', fontSize: 11, fontWeight: 700, cursor: 'pointer',
+            border: '1px solid #1E2D4A', background: '#101828',
+            color: copied ? '#06D6A0' : '#94A3B8', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          {copied ? 'OK' : 'COPY'}
         </button>
       </div>
 
